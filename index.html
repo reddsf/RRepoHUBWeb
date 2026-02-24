@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>RRepoHUB</title>
+<style>
+body{background:#0f172a;color:white;font-family:Arial;text-align:center}
+input,button{padding:10px;margin:5px}
+.file{border:1px solid #444;padding:10px;margin:10px}
+</style>
+</head>
+<body>
+
+<h1>🚀 RRepoHUB</h1>
+
+<div id="auth">
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button onclick="register()">Register</button>
+<button onclick="login()">Login</button>
+</div>
+
+<div id="panel" style="display:none">
+
+<h2>Files</h2>
+<div id="files"></div>
+
+<h3>Add File (admin)</h3>
+<input id="title" placeholder="Title">
+<input id="link" placeholder="Download Link">
+<button onclick="addFile()">Add</button>
+
+<br><br>
+<button onclick="logout()">Logout</button>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import { getFirestore, collection, addDoc, getDocs } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT_ID.firebaseapp.com",
+  projectId: "PROJECT_ID",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.register = async function(){
+  let email=document.getElementById("email").value;
+  let pass=document.getElementById("password").value;
+  await createUserWithEmailAndPassword(auth,email,pass);
+  alert("Account created");
+}
+
+window.login = async function(){
+  let email=document.getElementById("email").value;
+  let pass=document.getElementById("password").value;
+  await signInWithEmailAndPassword(auth,email,pass);
+  document.getElementById("auth").style.display="none";
+  document.getElementById("panel").style.display="block";
+  loadFiles();
+}
+
+window.logout = async function(){
+  await signOut(auth);
+  location.reload();
+}
+
+window.addFile = async function(){
+  let title=document.getElementById("title").value;
+  let link=document.getElementById("link").value;
+  await addDoc(collection(db,"files"),{title,link});
+  loadFiles();
+}
+
+async function loadFiles(){
+  let div=document.getElementById("files");
+  div.innerHTML="";
+  let snap=await getDocs(collection(db,"files"));
+  snap.forEach(doc=>{
+    let f=doc.data();
+    div.innerHTML+=`
+    <div class="file">
+      <b>${f.title}</b><br>
+      <a href="${f.link}" target="_blank">Download</a>
+    </div>`;
+  });
+}
+
+</script>
+
+</body>
+</html>
