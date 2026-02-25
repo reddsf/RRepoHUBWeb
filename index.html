@@ -1,175 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="ro">
 <head>
 <meta charset="UTF-8">
 <title>RRepoHUB</title>
-
-<style>
-body{
-  background:#0f172a;
-  color:white;
-  font-family:Arial;
-  text-align:center;
-}
-
-input,button{
-  padding:10px;
-  margin:5px;
-  border-radius:6px;
-  border:none;
-}
-
-button{
-  background:#2563eb;
-  color:white;
-  cursor:pointer;
-}
-
-.file{
-  border:1px solid #444;
-  padding:10px;
-  margin:10px;
-  border-radius:8px;
-}
-</style>
-
+<link href="style.css" rel="stylesheet">
 </head>
 <body>
 
-<h1>🚀 RRepoHUB</h1>
+<button id="langSwitch">EN</button>
 
-<div id="auth">
-<input id="email" placeholder="Email"><br>
-<input id="password" type="password" placeholder="Password"><br>
+<div class="container">
 
-<button onclick="register()">Register</button>
-<button onclick="login()">Login</button>
+<!-- ALERT -->
+<div class="card">
+  <p data-ro>RO: FileList nu a vândut și nu vinde invitații sau conturi. Oricine susține acest lucru încearcă să vă păcălească. Pentru reclamații apăsați aici.<br>Trebuie să aveți cookies activate.</p>
+  <p data-en class="hidden">EN: FileList has never sold and will never sell invites or accounts. Be aware of phishing and scams. For complaints please click here.<br>You need to have cookies enabled to log in or sign up.</p>
 </div>
 
-<div id="panel" style="display:none">
+<!-- AUTH PANEL -->
+<div id="authPanel" class="card">
+  <h2 data-ro>Login / Register</h2>
+  <h2 data-en class="hidden">Login / Register</h2>
 
-<h2>Files</h2>
-<div id="files"></div>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <input type="password" id="passwordConfirm" placeholder="Repeat Password (Register)">
+  <input type="text" id="inviteCode" placeholder="Invite code (Register)">
+  <div>
+    <label><input type="checkbox" id="rulesCheck"> Sunt de acord cu regulile site-ului.</label><br>
+    <label><input type="checkbox" id="faqCheck"> Voi citi pagina de FAQ înainte de a pune întrebări.</label><br>
+    <label><input type="checkbox" id="adultCheck"> Am cel puțin 18 ani.</label>
+  </div>
+  <button onclick="loginUser()">Login</button>
+  <button onclick="registerUser()">Register</button>
+</div>
 
-<h3>Add File (admin)</h3>
-<input id="title" placeholder="Title">
-<input id="link" placeholder="Download Link">
-<button onclick="addFile()">Add</button>
+<!-- USER PANEL -->
+<div id="userPanel" class="card hidden">
+  <h2>Files</h2>
+  <div id="fileList"></div>
+  <button onclick="logoutUser()">Logout</button>
+</div>
 
-<br><br>
-<button onclick="logout()">Logout</button>
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="card hidden">
+  <h2>Admin Dashboard</h2>
+  <div>
+    <h3>Create Invite Code</h3>
+    <button onclick="createInviteCode()">Generate Code</button>
+  </div>
+  <div>
+    <h3>Upload File</h3>
+    <input type="text" id="fileTitle" placeholder="File Title">
+    <input type="text" id="fileLink" placeholder="Download Link">
+    <button onclick="uploadFile()">Upload</button>
+  </div>
+</div>
 
 </div>
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  getDocs 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-
-// 🔥 CONFIGUL TAU FIREBASE
-const firebaseConfig = {
-  apiKey: "AIzaSyC1phDEwFAqMKdBk5R7sVb0yf87UOgIyis",
-  authDomain: "rrepohub.firebaseapp.com",
-  projectId: "rrepohub",
-};
-
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-
-// REGISTER
-window.register = async function(){
-  let email=document.getElementById("email").value;
-  let pass=document.getElementById("password").value;
-
-  try{
-    await createUserWithEmailAndPassword(auth,email,pass);
-    alert("Account created");
-  }catch(e){
-    alert(e.message);
-  }
-}
-
-
-// LOGIN
-window.login = async function(){
-  let email=document.getElementById("email").value;
-  let pass=document.getElementById("password").value;
-
-  try{
-    await signInWithEmailAndPassword(auth,email,pass);
-
-    document.getElementById("auth").style.display="none";
-    document.getElementById("panel").style.display="block";
-
-    loadFiles();
-
-  }catch(e){
-    alert(e.message);
-  }
-}
-
-
-// LOGOUT
-window.logout = async function(){
-  await signOut(auth);
-  location.reload();
-}
-
-
-// ADD FILE
-window.addFile = async function(){
-
-  let title=document.getElementById("title").value;
-  let link=document.getElementById("link").value;
-
-  await addDoc(collection(db,"files"),{
-    title:title,
-    link:link
-  });
-
-  loadFiles();
-}
-
-
-// LOAD FILES
-async function loadFiles(){
-
-  let div=document.getElementById("files");
-  div.innerHTML="";
-
-  let snap=await getDocs(collection(db,"files"));
-
-  snap.forEach(doc=>{
-
-    let f=doc.data();
-
-    div.innerHTML+=`
-    <div class="file">
-      <b>${f.title}</b><br>
-      <a href="${f.link}" target="_blank">Download</a>
-    </div>
-    `;
-  });
-}
-
-</script>
-
+<script type="module" src="app.js"></script>
 </body>
 </html>
